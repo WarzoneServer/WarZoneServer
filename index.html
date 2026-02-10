@@ -252,16 +252,6 @@
                     <button onclick="saveProfile()" data-lang="btn-add-profile" class="w-full btn-military py-4 font-black uppercase text-sm tracking-widest mt-2">ДОБАВИТЬ БОЙЦА</button>
                 </div>
             </div>
-
-            <!-- Секция Админа 2n30 -->
-            <div id="admin-section" class="hidden mt-10 border-t-2 border-[#8b9d67] pt-6 bg-[#8b9d67]/5 p-4">
-                <h3 data-lang="admin-panel-title" class="text-[#8b9d67] font-black font-oswald text-xl uppercase mb-4 flex items-center gap-2">
-                    <i data-lucide="shield-check" class="w-5 h-5"></i> ПАНЕЛЬ АДМИНИСТРАТОРА (2n30)
-                </h3>
-                <div id="admin-all-users" class="space-y-2 text-[10px] font-bold">
-                    <!-- Список всех аккаунтов на устройстве -->
-                </div>
-            </div>
         </div>
     </div>
 
@@ -440,8 +430,7 @@
                 "auth-new-nick": "НОВЫЙ НИКНЕЙМ:",
                 "team-blue": "СИНИЕ",
                 "team-red": "КРАСНЫЕ",
-                "btn-add-profile": "ДОБАВИТЬ БОЙЦА",
-                "admin-panel-title": "ПАНЕЛЬ АДМИНИСТРАТОРА (2n30)"
+                "btn-add-profile": "ДОБАВИТЬ БОЙЦА"
             },
             en: {
                 "nav-home": "Home",
@@ -470,8 +459,7 @@
                 "auth-new-nick": "NEW NICKNAME:",
                 "team-blue": "BLUE",
                 "team-red": "RED",
-                "btn-add-profile": "ADD SOLDIER",
-                "admin-panel-title": "ADMIN PANEL (2n30)"
+                "btn-add-profile": "ADD SOLDIER"
             }
         };
 
@@ -485,7 +473,6 @@
             document.getElementById('auth-modal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
             renderAccounts();
-            checkAdmin();
         }
 
         function closeAuth() {
@@ -517,7 +504,6 @@
             document.getElementById('mc-username').value = '';
             selectTeam('');
             renderAccounts();
-            checkAdmin();
         }
 
         function setActiveProfile(profile) {
@@ -525,7 +511,6 @@
             localStorage.setItem('wz_active_profile', JSON.stringify(profile));
             updateUserDisplay();
             renderAccounts();
-            checkAdmin();
         }
 
         function switchAccount(username) {
@@ -545,7 +530,6 @@
             
             updateUserDisplay();
             renderAccounts();
-            checkAdmin();
         }
 
         function renderAccounts() {
@@ -570,26 +554,6 @@
                 </div>
             `).join('');
             lucide.createIcons();
-        }
-
-        function checkAdmin() {
-            const adminSection = document.getElementById('admin-section');
-            const listContainer = document.getElementById('admin-all-users');
-            
-            if (activeProfile && activeProfile.username.toLowerCase() === '2n30') {
-                adminSection.classList.remove('hidden');
-                listContainer.innerHTML = accounts.map(acc => {
-                    const teamLabel = acc.team === 'alliance' ? translations[currentLang]['team-blue'] : translations[currentLang]['team-red'];
-                    return `
-                        <div class="flex justify-between border-b border-white/5 pb-1">
-                            <span class="text-white">${acc.username}</span>
-                            <span style="color: ${acc.team === 'alliance' ? 'var(--alliance-color)' : 'var(--rebels-color)'}">${teamLabel}</span>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                adminSection.classList.add('hidden');
-            }
         }
 
         function updateUserDisplay() {
@@ -621,7 +585,6 @@
             document.getElementById('btn-en').classList.toggle('lang-active', lang === 'en');
             
             renderAccounts();
-            checkAdmin();
         }
 
         function openDevlog() {
@@ -668,4 +631,3 @@
     </script>
 </body>
 </html>
-
