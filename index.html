@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WAR ZONE | Военный Minecraft Сервер</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключаем Font Awesome для оригинального логотипа Discord -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Montserrat:wght@400;900&display=swap" rel="stylesheet">
@@ -14,6 +13,8 @@
             --primary-war: #5d6d3e;
             --accent-war: #8b9d67;
             --bg-dark: #0d0e0a;
+            --alliance-color: #3b82f6;
+            --rebels-color: #ef4444;
         }
         html {
             scroll-behavior: smooth;
@@ -63,6 +64,8 @@
             align-items: center;
             justify-content: center;
             text-decoration: none;
+            border: none;
+            color: white;
         }
         .btn-military:hover {
             background: var(--accent-war);
@@ -113,7 +116,52 @@
             transform: scale(1.1);
         }
 
-        /* Стиль для секретных уведомлений */
+        /* Окна */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: rgba(20, 22, 15, 0.95);
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid rgba(139, 157, 103, 0.3);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Выбор команды */
+        .team-option {
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .team-option.selected-alliance { border-color: var(--alliance-color); background: rgba(59, 130, 246, 0.1); }
+        .team-option.selected-rebels { border-color: var(--rebels-color); background: rgba(239, 68, 68, 0.1); }
+
+        .account-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s;
+        }
+        .account-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .account-item.active {
+            border-color: var(--accent-war);
+            background: rgba(139, 157, 103, 0.1);
+        }
+
+        /* Пасхалки */
         .custom-toast {
             position: fixed;
             bottom: 2rem;
@@ -130,19 +178,8 @@
             text-align: center;
             min-width: 300px;
         }
+        #easter-egg-toast { background: #ff4444; box-shadow: 0 0 40px rgba(255, 68, 68, 0.7); animation: shake 0.5s infinite; }
 
-        #easter-egg-toast {
-            background: #ff4444;
-            box-shadow: 0 0 40px rgba(255, 68, 68, 0.7);
-            animation: shake 0.5s infinite;
-        }
-
-        #shield-toast {
-            background: #4444ff;
-            box-shadow: 0 0 40px rgba(68, 68, 255, 0.7);
-        }
-
-        /* Финальная пасхалка на весь экран */
         #full-screen-egg {
             position: fixed;
             inset: 0;
@@ -168,14 +205,89 @@
 </head>
 <body>
 
-    <!-- Уведомления (пасхалки) -->
     <div id="easter-egg-toast" class="custom-toast">ах ты злой котокбасина тупая</div>
-    <div id="shield-toast" class="custom-toast text-xs">Зачем ты нажимаешь на меня?</div>
     
-    <!-- Финальный экран -->
     <div id="full-screen-egg">
-        <h2 class="text-[10vw] font-black uppercase leading-none">ТЫ ЗАКОЛЕБАЛ</h2>
-        <button onclick="document.getElementById('full-screen-egg').style.display='none'" class="mt-10 border-4 border-white px-10 py-4 font-bold text-2xl hover:bg-white hover:text-red-600 transition-colors uppercase">Простите меня</button>
+        <h2 id="egg-text" data-lang="egg-main-text" class="text-[10vw] font-black uppercase leading-none">ТЫ ЗАКОЛЕБАЛ</h2>
+        <button id="egg-btn" data-lang="egg-btn-text" onclick="document.getElementById('full-screen-egg').style.display='none'" class="mt-10 border-4 border-white px-10 py-4 font-bold text-2xl hover:bg-white hover:text-red-600 transition-colors uppercase">Простите меня</button>
+    </div>
+
+    <!-- Окно Профилей и Регистрации -->
+    <div id="auth-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="auth-title" data-lang="auth-modal-title" class="text-3xl font-black font-oswald text-white uppercase">ПРОФИЛИ БОЙЦОВ</h2>
+                <button onclick="closeAuth()" class="text-white/30 hover:text-white transition-colors"><i data-lucide="x"></i></button>
+            </div>
+            
+            <!-- Список существующих аккаунтов -->
+            <div id="accounts-section" class="mb-8">
+                <p data-lang="auth-modal-label" class="text-[10px] font-bold text-[#8b9d67] uppercase mb-3 tracking-widest">ВАШИ ПЕРСОНАЖИ:</p>
+                <div id="accounts-list" class="space-y-2">
+                    <!-- Заполняется через JS -->
+                </div>
+            </div>
+
+            <!-- Форма создания нового -->
+            <div class="border-t border-white/10 pt-6">
+                <p data-lang="auth-new-nick" class="text-[10px] font-bold text-[#8b9d67] uppercase mb-4 tracking-widest">НОВЫЙ НИКНЕЙМ:</p>
+                <div class="space-y-6">
+                    <div>
+                        <input type="text" id="mc-username" placeholder="НИКНЕЙМ..." class="w-full bg-black/50 border border-white/10 p-4 text-white font-bold focus:border-[#8b9d67] outline-none transition-all">
+                    </div>
+
+                    <div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div onclick="selectTeam('alliance')" id="team-alliance" class="team-option p-4 bg-black/30 text-center border border-white/10">
+                                <div class="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-2 shadow-[0_0_10px_rgba(59,130,246,0.6)]"></div>
+                                <p data-lang="team-blue" class="font-black text-[10px] text-white uppercase">СИНИЕ</p>
+                            </div>
+                            <div onclick="selectTeam('rebels')" id="team-rebels" class="team-option p-4 bg-black/30 text-center border border-white/10">
+                                <div class="w-3 h-3 rounded-full bg-red-500 mx-auto mb-2 shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
+                                <p data-lang="team-red" class="font-black text-[10px] text-white uppercase">КРАСНЫЕ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="saveProfile()" data-lang="btn-add-profile" class="w-full btn-military py-4 font-black uppercase text-sm tracking-widest mt-2">ДОБАВИТЬ БОЙЦА</button>
+                </div>
+            </div>
+
+            <!-- Секция Админа 2n30 -->
+            <div id="admin-section" class="hidden mt-10 border-t-2 border-[#8b9d67] pt-6 bg-[#8b9d67]/5 p-4">
+                <h3 data-lang="admin-panel-title" class="text-[#8b9d67] font-black font-oswald text-xl uppercase mb-4 flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-5 h-5"></i> ПАНЕЛЬ АДМИНИСТРАТОРА (2n30)
+                </h3>
+                <div id="admin-all-users" class="space-y-2 text-[10px] font-bold">
+                    <!-- Список всех аккаунтов на устройстве -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно Девлога -->
+    <div id="devlog-modal" class="modal-overlay" onclick="closeDevlog()">
+        <div class="modal-content max-w-3xl overflow-y-auto max-h-[80vh]" onclick="event.stopPropagation()">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-[#14160f] z-20">
+                <h2 data-lang="devlog-title" class="text-[#8b9d67] font-oswald text-2xl uppercase font-bold tracking-widest">ДЕВЛОГ / DEVELOPMENT LOG</h2>
+                <button onclick="closeDevlog()" class="text-white/50 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="p-8 space-y-12 bg-black/20">
+                <article class="border-l-4 border-[#5d6d3e] pl-6 py-2">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 data-lang="devlog-h1-title" class="text-3xl font-black uppercase font-oswald text-white leading-tight">НОВАЯ ИСТОРИЯ</h3>
+                        <span class="text-[#5d6d3e] font-mono text-sm uppercase">#001 | 10.02.2026</span>
+                    </div>
+                    <div id="devlog-content" data-lang="devlog-h1-body" class="text-white/80 leading-relaxed text-lg">
+                        <p class="mb-4">В первом девлоге мы хотим сообщить о запуске нашего официального сайта, на котором вы читаете данный материал.</p>
+                        <p class="mb-4">В настоящее время ведётся работа над картой, была подготовлена сборка проекта. Также мы рассматриваем возможность создания собственных модификаций.</p>
+                        <p class="italic text-[#8b9d67] font-bold">На данный момент это вся информация.</p>
+                    </div>
+                </article>
+            </div>
+        </div>
     </div>
 
     <!-- Навигация -->
@@ -183,20 +295,17 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <div class="flex items-center gap-3">
-                    <i data-lucide="shield" class="text-[#8b9d67] w-8 h-8"></i>
-                    <span class="text-3xl font-black tracking-tighter uppercase font-oswald text-white">WAR<span class="text-[#8b9d67]">ZONE</span></span>
+                    <i data-lucide="crosshair" class="text-[#8b9d67] w-8 h-8"></i>
+                    <span class="text-3xl font-black tracking-tighter uppercase font-oswald text-white text-nowrap">WAR<span class="text-[#8b9d67]">ZONE</span></span>
                 </div>
                 
                 <div class="hidden lg:flex space-x-6 items-center">
-                    <div class="flex gap-6 items-center border-r border-white/10 pr-6 mr-2">
-                        <a href="https://discord.gg/SHGKZdZH5h" target="_blank" class="social-link" title="Discord">
-                            <i class="fa-brands fa-discord text-2xl"></i>
-                        </a>
-                        <a href="https://www.youtube.com/@WarZoneMINE" target="_blank" class="social-link" title="YouTube">
-                            <i class="fa-brands fa-youtube text-2xl"></i>
-                        </a>
+                    <div id="user-display" class="hidden flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2 rounded-sm mr-4 cursor-pointer hover:bg-white/10" onclick="openAuth()">
+                        <div id="user-team-icon" class="w-3 h-3 rounded-full"></div>
+                        <span id="display-name" class="font-bold text-xs uppercase tracking-tighter text-white italic">Guest</span>
+                        <i data-lucide="chevron-down" class="w-3 h-3 text-gray-500"></i>
                     </div>
-                    
+
                     <div class="flex gap-1 mr-4">
                         <button onclick="setLanguage('ru')" id="btn-ru" class="lang-btn lang-active">RU</button>
                         <button onclick="setLanguage('en')" id="btn-en" class="lang-btn">EN</button>
@@ -205,6 +314,7 @@
                     <div class="flex space-x-8 font-bold uppercase text-sm tracking-widest text-white italic mr-6">
                         <a href="#home" data-lang="nav-home" class="hover:text-[#8b9d67] transition-colors">Главная</a>
                         <a href="#modes" data-lang="nav-tasks" class="hover:text-[#8b9d67] transition-colors">Задачи</a>
+                        <button onclick="openDevlog()" data-lang="nav-devlog" class="hover:text-[#8b9d67] transition-colors uppercase italic font-bold">Девлог</button>
                     </div>
                     
                     <div class="flex gap-4">
@@ -228,7 +338,7 @@
             <div class="relative inline-block group mt-4">
                 <div onclick="copyToClipboard('WaRzOnE.exaroton.me')" class="cursor-pointer bg-black/90 border border-white/30 p-5 px-10 rounded-sm flex items-center gap-6 hover:border-[#8b9d67] transition-all active:scale-95 group shadow-[0_30px_60px_rgba(0,0,0,0.9)] backdrop-blur-md">
                     <div class="text-left">
-                        <p data-lang="ip-label" class="text-[10px] uppercase font-bold text-[#8b9d67] tracking-widest mb-1">Шифр доступа (IP)</p>
+                        <p data-lang="ip-label" class="text-[10px] uppercase font-bold text-[#8b9d67] tracking-widest mb-1">Айпи</p>
                         <p id="server-ip" class="text-2xl md:text-3xl font-black tracking-widest font-oswald text-white uppercase">WaRzOnE.exaroton.me</p>
                     </div>
                     <div class="w-12 h-12 bg-[#8b9d67]/10 flex items-center justify-center border border-[#8b9d67]/20 group-hover:bg-[#8b9d67]/20 transition-colors">
@@ -236,7 +346,7 @@
                     </div>
                 </div>
                 <div id="copy-success" data-lang="copy-success" class="absolute -bottom-14 left-1/2 -translate-x-1/2 bg-[#8b9d67] text-black font-black py-2 px-6 rounded-sm text-xs uppercase tracking-tighter italic hidden shadow-lg">
-                    Координаты в буфере!
+                    Айпи Скопирован
                 </div>
             </div>
 
@@ -246,14 +356,9 @@
                 </a>
             </div>
         </div>
-        
-        <div class="absolute top-24 left-10 w-20 h-20 border-t-2 border-l-2 border-[#8b9d67]/80 z-20"></div>
-        <div class="absolute top-24 right-10 w-20 h-20 border-t-2 border-r-2 border-[#8b9d67]/80 z-20"></div>
-        <div class="absolute bottom-10 left-10 w-20 h-20 border-b-2 border-l-2 border-[#8b9d67]/80 z-20"></div>
-        <div class="absolute bottom-10 right-10 w-20 h-20 border-b-2 border-r-2 border-[#8b9d67]/80 z-20"></div>
     </header>
 
-    <!-- Секция с контентом -->
+    <!-- Задачи -->
     <section id="modes" class="py-32 px-4 bg-[#0a0b08] relative">
         <div class="max-w-7xl mx-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
@@ -262,10 +367,9 @@
                         <i data-lucide="crosshair" class="text-[#8b9d67] w-8 h-8"></i>
                     </div>
                     <h3 data-lang="card1-title" class="text-2xl font-bold font-oswald uppercase mb-4 text-white">Одроженск</h3>
-                    <p data-lang="card1-desc" class="text-gray-400 text-sm leading-relaxed mb-6">
+                    <p data-lang="card1-desc" class="text-gray-400 text-sm leading-relaxed">
                         Масштабное сражение. Захватывайте стратегические точки, используя пехоту и бронетехнику для подавления противника.
                     </p>
-                    <span data-lang="card1-status" class="text-[10px] font-mono text-[#5d6d3e] uppercase">Status: Battle Active</span>
                 </div>
 
                 <div class="war-card p-10 flex flex-col items-center text-center">
@@ -273,10 +377,9 @@
                         <i data-lucide="users" class="text-[#8b9d67] w-8 h-8"></i>
                     </div>
                     <h3 data-lang="card2-title" class="text-2xl font-bold font-oswald uppercase mb-4 text-white">Командный бой</h3>
-                    <p data-lang="card2-desc" class="text-gray-400 text-sm leading-relaxed mb-6">
+                    <p data-lang="card2-desc" class="text-gray-400 text-sm leading-relaxed">
                         Победа зависит от слаженности вашего отряда. Используйте тактическое преимущество и удерживайте позиции до конца.
                     </p>
-                    <span data-lang="card2-status" class="text-[10px] font-mono text-[#5d6d3e] uppercase">Tactical Link: Online</span>
                 </div>
             </div>
         </div>
@@ -313,105 +416,240 @@
             ru: {
                 "nav-home": "Главная",
                 "nav-tasks": "Задачи",
+                "nav-devlog": "Девлог",
                 "btn-download-modpack": "Скачать сборку",
-                "ip-label": "Шифр доступа (IP)",
-                "copy-success": "Координаты в буфере!",
+                "ip-label": "Айпи",
+                "copy-success": "Айпи Скопирован",
                 "card1-title": "Одроженск",
                 "card1-desc": "Масштабное сражение. Захватывайте стратегические точки, используя пехоту и бронетехнику для подавления противника.",
-                "card1-status": "Status: Battle Active",
                 "card2-title": "Командный бой",
                 "card2-desc": "Победа зависит от слаженности вашего отряда. Используйте тактическое преимущество и удерживайте позиции до конца.",
-                "card2-status": "Tactical Link: Online",
                 "footer-desc": "Military Simulation Minecraft Server",
                 "footer-copy": "© 2026 WARZONE. НЕ ЯВЛЯЕТСЯ ОФИЦИАЛЬНЫМ ПРОДУКТОМ MOJANG.",
-                "easter-egg": "ах ты злой котокбасина тупая",
-                "shield-msg-1": "Зачем ты нажимаешь на меня?",
-                "shield-msg-2": "Ты достал!",
-                "shield-msg-3": "ТЫ ЗАКОЛЕБАЛ"
+                "devlog-title": "ДЕВЛОГ / DEVELOPMENT LOG",
+                "devlog-h1-title": "НОВАЯ ИСТОРИЯ",
+                "devlog-h1-body": `
+                    <p class="mb-4">В первом девлоге мы хотим сообщить о запуске нашего официального сайта, на котором вы читаете данный материал.</p>
+                    <p class="mb-4">В настоящее время ведётся работа над картой, была подготовлена сборка проекта. Также мы рассматриваем возможность создания собственных модификаций.</p>
+                    <p class="italic text-[#8b9d67] font-bold">На данный момент это вся информация.</p>
+                `,
+                "egg-main-text": "ТЫ ЗАКОЛЕБАЛ",
+                "egg-btn-text": "Простите меня",
+                "auth-modal-title": "ПРОФИЛИ БОЙЦОВ",
+                "auth-modal-label": "ВАШИ ПЕРСОНАЖИ:",
+                "auth-new-nick": "НОВЫЙ НИКНЕЙМ:",
+                "team-blue": "СИНИЕ",
+                "team-red": "КРАСНЫЕ",
+                "btn-add-profile": "ДОБАВИТЬ БОЙЦА",
+                "admin-panel-title": "ПАНЕЛЬ АДМИНИСТРАТОРА (2n30)"
             },
             en: {
                 "nav-home": "Home",
                 "nav-tasks": "Objectives",
+                "nav-devlog": "Devlog",
                 "btn-download-modpack": "Download Modpack",
-                "ip-label": "Access Cipher (IP)",
-                "copy-success": "Coordinates copied!",
+                "ip-label": "IP",
+                "copy-success": "IP Copied",
                 "card1-title": "Odrozhensk",
                 "card1-desc": "Large-scale combat. Capture strategic objectives using infantry and armor to suppress the enemy.",
-                "card1-status": "Status: Battle Active",
                 "card2-title": "Team Deathmatch",
                 "card2-desc": "Victory depends on your squad's coordination. Use tactical advantages and hold your positions to the end.",
-                "card2-status": "Tactical Link: Online",
                 "footer-desc": "Military Simulation Minecraft Server",
                 "footer-copy": "© 2026 WARZONE. NOT AN OFFICIAL MOJANG PRODUCT.",
-                "easter-egg": "you evil stupid kotakbasina",
-                "shield-msg-1": "Why are you clicking on me?",
-                "shield-msg-2": "Stop it!",
-                "shield-msg-3": "YOU ARE ANNOYING"
+                "devlog-title": "DEV LOG / DEVELOPMENT LOG",
+                "devlog-h1-title": "A NEW STORY",
+                "devlog-h1-body": `
+                    <p class="mb-4">In this first devlog, we are excited to announce the launch of our official website, where you are currently reading this material.</p>
+                    <p class="mb-4">Currently, work is underway on the map, and a project modpack has been prepared. We are also exploring the possibility of creating our own custom modifications.</p>
+                    <p class="italic text-[#8b9d67] font-bold">This is all the information for now.</p>
+                `,
+                "egg-main-text": "YOU ARE ANNOYING",
+                "egg-btn-text": "Forgive me",
+                "auth-modal-title": "COMBAT PROFILES",
+                "auth-modal-label": "YOUR CHARACTERS:",
+                "auth-new-nick": "NEW NICKNAME:",
+                "team-blue": "BLUE",
+                "team-red": "RED",
+                "btn-add-profile": "ADD SOLDIER",
+                "admin-panel-title": "ADMIN PANEL (2n30)"
             }
         };
 
         let currentLang = 'ru';
+        let selectedTeam = '';
+        
+        let accounts = JSON.parse(localStorage.getItem('wz_accounts_list')) || [];
+        let activeProfile = JSON.parse(localStorage.getItem('wz_active_profile')) || null;
+
+        function openAuth() {
+            document.getElementById('auth-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            renderAccounts();
+            checkAdmin();
+        }
+
+        function closeAuth() {
+            document.getElementById('auth-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        function selectTeam(team) {
+            selectedTeam = team;
+            document.getElementById('team-alliance').className = "team-option p-4 bg-black/30 text-center border border-white/10" + (team === 'alliance' ? ' selected-alliance' : '');
+            document.getElementById('team-rebels').className = "team-option p-4 bg-black/30 text-center border border-white/10" + (team === 'rebels' ? ' selected-rebels' : '');
+        }
+
+        function saveProfile() {
+            const username = document.getElementById('mc-username').value.trim();
+            if(!username || !selectedTeam) return;
+            
+            const exists = accounts.find(a => a.username.toLowerCase() === username.toLowerCase());
+            
+            if (!exists) {
+                const newProfile = { username, team: selectedTeam };
+                accounts.push(newProfile);
+                localStorage.setItem('wz_accounts_list', JSON.stringify(accounts));
+                setActiveProfile(newProfile);
+            } else {
+                setActiveProfile(exists);
+            }
+            
+            document.getElementById('mc-username').value = '';
+            selectTeam('');
+            renderAccounts();
+            checkAdmin();
+        }
+
+        function setActiveProfile(profile) {
+            activeProfile = profile;
+            localStorage.setItem('wz_active_profile', JSON.stringify(profile));
+            updateUserDisplay();
+            renderAccounts();
+            checkAdmin();
+        }
+
+        function switchAccount(username) {
+            const profile = accounts.find(a => a.username === username);
+            if (profile) setActiveProfile(profile);
+        }
+
+        function deleteAccount(username, event) {
+            event.stopPropagation();
+            accounts = accounts.filter(a => a.username !== username);
+            localStorage.setItem('wz_accounts_list', JSON.stringify(accounts));
+            
+            if (activeProfile && activeProfile.username === username) {
+                activeProfile = accounts.length > 0 ? accounts[0] : null;
+                localStorage.setItem('wz_active_profile', JSON.stringify(activeProfile));
+            }
+            
+            updateUserDisplay();
+            renderAccounts();
+            checkAdmin();
+        }
+
+        function renderAccounts() {
+            const list = document.getElementById('accounts-list');
+            const section = document.getElementById('accounts-section');
+            
+            if (accounts.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            list.innerHTML = accounts.map(acc => `
+                <div onclick="switchAccount('${acc.username}')" class="account-item p-3 flex justify-between items-center cursor-pointer ${activeProfile?.username === acc.username ? 'active' : ''}">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full" style="background-color: ${acc.team === 'alliance' ? 'var(--alliance-color)' : 'var(--rebels-color)'}"></div>
+                        <span class="font-bold text-[11px] text-white uppercase tracking-wider">${acc.username}</span>
+                    </div>
+                    <button onclick="deleteAccount('${acc.username}', event)" class="text-white/10 hover:text-red-500 transition-colors">
+                        <i data-lucide="trash-2" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function checkAdmin() {
+            const adminSection = document.getElementById('admin-section');
+            const listContainer = document.getElementById('admin-all-users');
+            
+            if (activeProfile && activeProfile.username.toLowerCase() === '2n30') {
+                adminSection.classList.remove('hidden');
+                listContainer.innerHTML = accounts.map(acc => {
+                    const teamLabel = acc.team === 'alliance' ? translations[currentLang]['team-blue'] : translations[currentLang]['team-red'];
+                    return `
+                        <div class="flex justify-between border-b border-white/5 pb-1">
+                            <span class="text-white">${acc.username}</span>
+                            <span style="color: ${acc.team === 'alliance' ? 'var(--alliance-color)' : 'var(--rebels-color)'}">${teamLabel}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                adminSection.classList.add('hidden');
+            }
+        }
+
+        function updateUserDisplay() {
+            const display = document.getElementById('user-display');
+            if(activeProfile) {
+                display.classList.remove('hidden');
+                display.classList.add('flex');
+                document.getElementById('display-name').textContent = activeProfile.username;
+                const icon = document.getElementById('user-team-icon');
+                icon.style.backgroundColor = activeProfile.team === 'alliance' ? 'var(--alliance-color)' : 'var(--rebels-color)';
+            } else {
+                display.classList.add('hidden');
+            }
+        }
 
         function setLanguage(lang) {
             if (lang === currentLang) return;
+            currentLang = lang;
+            
             document.querySelectorAll('[data-lang]').forEach(element => {
                 const key = element.getAttribute('data-lang');
                 if (translations[lang][key]) {
-                    element.textContent = translations[lang][key];
+                    if (key.includes('body')) element.innerHTML = translations[lang][key];
+                    else element.textContent = translations[lang][key];
                 }
             });
+            
             document.getElementById('btn-ru').classList.toggle('lang-active', lang === 'ru');
             document.getElementById('btn-en').classList.toggle('lang-active', lang === 'en');
-            document.documentElement.lang = lang;
-            currentLang = lang;
+            
+            renderAccounts();
+            checkAdmin();
         }
 
-        // Многоуровневая логика пасхалки на щит
-        let shieldClicks = 0;
-        let shieldTimer;
+        function openDevlog() {
+            document.getElementById('devlog-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
 
+        function closeDevlog() {
+            document.getElementById('devlog-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        let shieldClicks = 0;
         function handleShieldClick() {
             shieldClicks++;
-            clearTimeout(shieldTimer);
-            shieldTimer = setTimeout(() => { /* Не сбрасываем, чтобы прогресс сохранялся */ }, 2000);
-
-            const toast = document.getElementById('shield-toast');
-            
-            if (shieldClicks === 1) {
-                toast.textContent = translations[currentLang]["shield-msg-1"];
-                toast.style.display = 'block';
-                setTimeout(() => { toast.style.display = 'none'; }, 2000);
-            } 
-            else if (shieldClicks === 4) { // После первой серии в 1 клик, еще 3 нажатия
-                toast.textContent = translations[currentLang]["shield-msg-2"];
-                toast.style.display = 'block';
-                setTimeout(() => { toast.style.display = 'none'; }, 2000);
-            } 
-            else if (shieldClicks === 14) { // Еще 10 нажатий
+            if (shieldClicks === 14) { 
                 document.getElementById('full-screen-egg').style.display = 'flex';
-                shieldClicks = 0; // Сброс
+                shieldClicks = 0; 
             }
         }
-
-        // Логика пасхалки на копирайт
-        let clickCount = 0;
-        let clickTimer;
 
         function handleCopyrightClick() {
-            clickCount++;
-            clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => { clickCount = 0; }, 500);
-
-            if (clickCount === 3) {
-                const toast = document.getElementById('easter-egg-toast');
-                toast.textContent = translations[currentLang]["easter-egg"];
-                toast.style.display = 'block';
-                setTimeout(() => { toast.style.display = 'none'; }, 3000);
-                clickCount = 0;
-            }
+            const toast = document.getElementById('easter-egg-toast');
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
         }
 
-        async function copyToClipboard(text) {
+        function copyToClipboard(text) {
             const el = document.createElement('textarea');
             el.value = text;
             document.body.appendChild(el);
@@ -421,6 +659,11 @@
             const msg = document.getElementById('copy-success');
             msg.classList.remove('hidden');
             setTimeout(() => msg.classList.add('hidden'), 2500);
+        }
+
+        window.onload = () => {
+            updateUserDisplay();
+            if(!activeProfile) setTimeout(openAuth, 1000);
         }
     </script>
 </body>
