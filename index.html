@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WAR ZONE | Военный Minecraft Сервер</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем Font Awesome для оригинального логотипа Discord -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Montserrat:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-war: #5d6d3e;
+            --accent-war: #8b9d67;
+            --bg-dark: #0d0e0a;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-dark);
+            color: #e0e0e0;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .font-oswald {
+            font-family: 'Oswald', sans-serif;
+        }
+        .hero-bg {
+            background-color: var(--bg-dark);
+            background-image: linear-gradient(rgba(13, 14, 10, 0.3), rgba(13, 14, 10, 0.3)), url('https://i.postimg.cc/Z5Cs8z0x/2026-01-24-12-34-00.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: relative;
+        }
+        .hero-bg::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, transparent 0%, var(--bg-dark) 98%);
+            pointer-events: none;
+        }
+        .war-card {
+            background: rgba(20, 22, 15, 0.9);
+            border: 1px solid rgba(93, 109, 62, 0.2);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .war-card:hover {
+            border-color: var(--accent-war);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .btn-military {
+            background: var(--primary-war);
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        .btn-military:hover {
+            background: var(--accent-war);
+            transform: scale(1.05);
+        }
+        .scanner-line {
+            height: 2px;
+            background: rgba(139, 157, 103, 0.5);
+            width: 100%;
+            position: absolute;
+            z-index: 5;
+            animation: scan 8s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        .glitch-text {
+            text-shadow: 2px 2px 0px #000, 0 0 20px rgba(0, 0, 0, 1), 0 0 10px rgba(139, 157, 103, 0.6);
+        }
+        .lang-btn {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(139, 157, 103, 0.3);
+            color: #8b9d67;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        .lang-btn:hover {
+            background: rgba(139, 157, 103, 0.3);
+        }
+        .lang-active {
+            background: #8b9d67;
+            color: black;
+        }
+        .social-link {
+            transition: all 0.3s ease;
+            color: #8b9d67;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .social-link:hover {
+            color: white;
+            filter: drop-shadow(0 0 10px #8b9d67);
+            transform: scale(1.1);
+        }
+
+        /* Стиль для секретных уведомлений */
+        .custom-toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 1.5rem 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            z-index: 100;
+            border: 3px solid white;
+            display: none;
+            text-align: center;
+            min-width: 300px;
+        }
+
+        #easter-egg-toast {
+            background: #ff4444;
+            box-shadow: 0 0 40px rgba(255, 68, 68, 0.7);
+            animation: shake 0.5s infinite;
+        }
+
+        #shield-toast {
+            background: #4444ff;
+            box-shadow: 0 0 40px rgba(68, 68, 255, 0.7);
+        }
+
+        /* Финальная пасхалка на весь экран */
+        #full-screen-egg {
+            position: fixed;
+            inset: 0;
+            background: red;
+            color: white;
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Oswald', sans-serif;
+            text-align: center;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(-50%) translate(2px, 2px); }
+            25% { transform: translateX(-50%) translate(-2px, -2px); }
+            50% { transform: translateX(-50%) translate(2px, -2px); }
+            75% { transform: translateX(-50%) translate(-2px, 2px); }
+            100% { transform: translateX(-50%) translate(0, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Уведомления (пасхалки) -->
+    <div id="easter-egg-toast" class="custom-toast">ах ты злой котокбасина тупая</div>
+    <div id="shield-toast" class="custom-toast text-xs">Зачем ты нажимаешь на меня?</div>
+    
+    <!-- Финальный экран -->
+    <div id="full-screen-egg">
+        <h2 class="text-[10vw] font-black uppercase leading-none">ТЫ ЗАКОЛЕБАЛ</h2>
+        <button onclick="document.getElementById('full-screen-egg').style.display='none'" class="mt-10 border-4 border-white px-10 py-4 font-bold text-2xl hover:bg-white hover:text-red-600 transition-colors uppercase">Простите меня</button>
+    </div>
+
+    <!-- Навигация -->
+    <nav class="fixed w-full z-50 bg-[#0d0e0a]/95 backdrop-blur-md border-b border-white/10 shadow-2xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <div class="flex items-center gap-3">
+                    <i data-lucide="shield" class="text-[#8b9d67] w-8 h-8"></i>
+                    <span class="text-3xl font-black tracking-tighter uppercase font-oswald text-white">WAR<span class="text-[#8b9d67]">ZONE</span></span>
+                </div>
+                
+                <div class="hidden lg:flex space-x-6 items-center">
+                    <div class="flex gap-6 items-center border-r border-white/10 pr-6 mr-2">
+                        <a href="https://discord.gg/SHGKZdZH5h" target="_blank" class="social-link" title="Discord">
+                            <i class="fa-brands fa-discord text-2xl"></i>
+                        </a>
+                        <a href="https://www.youtube.com/@WarZoneMINE" target="_blank" class="social-link" title="YouTube">
+                            <i class="fa-brands fa-youtube text-2xl"></i>
+                        </a>
+                    </div>
+                    
+                    <div class="flex gap-1 mr-4">
+                        <button onclick="setLanguage('ru')" id="btn-ru" class="lang-btn lang-active">RU</button>
+                        <button onclick="setLanguage('en')" id="btn-en" class="lang-btn">EN</button>
+                    </div>
+                    
+                    <div class="flex space-x-8 font-bold uppercase text-sm tracking-widest text-white italic mr-6">
+                        <a href="#home" data-lang="nav-home" class="hover:text-[#8b9d67] transition-colors">Главная</a>
+                        <a href="#modes" data-lang="nav-tasks" class="hover:text-[#8b9d67] transition-colors">Задачи</a>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <a href="https://files.catbox.moe/2n30wk.zip" target="_blank" data-lang="btn-download-modpack" class="bg-[#5d6d3e] text-white px-8 py-2 btn-military font-bold uppercase text-xs">Скачать сборку</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Главный экран -->
+    <header id="home" class="hero-bg flex items-center justify-center relative overflow-hidden">
+        <div class="scanner-line"></div>
+        <div class="text-center px-4 z-10">
+            <div class="flex flex-col items-center mt-20">
+                <h1 class="text-7xl md:text-[11rem] font-black leading-none tracking-tighter uppercase font-oswald text-[#8b9d67] drop-shadow-[0_15px_40px_rgba(0,0,0,1)] mb-12 mt-8 glitch-text">
+                    WAR ZONE
+                </h1>
+            </div>
+            
+            <div class="relative inline-block group mt-4">
+                <div onclick="copyToClipboard('WaRzOnE.exaroton.me')" class="cursor-pointer bg-black/90 border border-white/30 p-5 px-10 rounded-sm flex items-center gap-6 hover:border-[#8b9d67] transition-all active:scale-95 group shadow-[0_30px_60px_rgba(0,0,0,0.9)] backdrop-blur-md">
+                    <div class="text-left">
+                        <p data-lang="ip-label" class="text-[10px] uppercase font-bold text-[#8b9d67] tracking-widest mb-1">Шифр доступа (IP)</p>
+                        <p id="server-ip" class="text-2xl md:text-3xl font-black tracking-widest font-oswald text-white uppercase">WaRzOnE.exaroton.me</p>
+                    </div>
+                    <div class="w-12 h-12 bg-[#8b9d67]/10 flex items-center justify-center border border-[#8b9d67]/20 group-hover:bg-[#8b9d67]/20 transition-colors">
+                        <i data-lucide="copy" class="text-[#8b9d67] w-6 h-6"></i>
+                    </div>
+                </div>
+                <div id="copy-success" data-lang="copy-success" class="absolute -bottom-14 left-1/2 -translate-x-1/2 bg-[#8b9d67] text-black font-black py-2 px-6 rounded-sm text-xs uppercase tracking-tighter italic hidden shadow-lg">
+                    Координаты в буфере!
+                </div>
+            </div>
+
+            <div class="mt-12">
+                <a href="https://files.catbox.moe/2n30wk.zip" target="_blank" data-lang="btn-download-modpack" class="bg-[#5d6d3e] text-white px-12 py-4 btn-military font-black uppercase text-lg tracking-widest shadow-[0_15px_40_rgba(0,0,0,0.7)] border-b-4 border-black/30">
+                    Скачать сборку
+                </a>
+            </div>
+        </div>
+        
+        <div class="absolute top-24 left-10 w-20 h-20 border-t-2 border-l-2 border-[#8b9d67]/80 z-20"></div>
+        <div class="absolute top-24 right-10 w-20 h-20 border-t-2 border-r-2 border-[#8b9d67]/80 z-20"></div>
+        <div class="absolute bottom-10 left-10 w-20 h-20 border-b-2 border-l-2 border-[#8b9d67]/80 z-20"></div>
+        <div class="absolute bottom-10 right-10 w-20 h-20 border-b-2 border-r-2 border-[#8b9d67]/80 z-20"></div>
+    </header>
+
+    <!-- Секция с контентом -->
+    <section id="modes" class="py-32 px-4 bg-[#0a0b08] relative">
+        <div class="max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="war-card p-10 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-[#5d6d3e]/10 border border-[#5d6d3e]/30 flex items-center justify-center mb-6">
+                        <i data-lucide="crosshair" class="text-[#8b9d67] w-8 h-8"></i>
+                    </div>
+                    <h3 data-lang="card1-title" class="text-2xl font-bold font-oswald uppercase mb-4 text-white">Одроженск</h3>
+                    <p data-lang="card1-desc" class="text-gray-400 text-sm leading-relaxed mb-6">
+                        Масштабное сражение. Захватывайте стратегические точки, используя пехоту и бронетехнику для подавления противника.
+                    </p>
+                    <span data-lang="card1-status" class="text-[10px] font-mono text-[#5d6d3e] uppercase">Status: Battle Active</span>
+                </div>
+
+                <div class="war-card p-10 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-[#5d6d3e]/10 border border-[#5d6d3e]/30 flex items-center justify-center mb-6">
+                        <i data-lucide="users" class="text-[#8b9d67] w-8 h-8"></i>
+                    </div>
+                    <h3 data-lang="card2-title" class="text-2xl font-bold font-oswald uppercase mb-4 text-white">Командный бой</h3>
+                    <p data-lang="card2-desc" class="text-gray-400 text-sm leading-relaxed mb-6">
+                        Победа зависит от слаженности вашего отряда. Используйте тактическое преимущество и удерживайте позиции до конца.
+                    </p>
+                    <span data-lang="card2-status" class="text-[10px] font-mono text-[#5d6d3e] uppercase">Tactical Link: Online</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Подвал -->
+    <footer class="py-20 bg-black border-t border-white/5 text-white">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-10">
+                <div class="text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-3 mb-4">
+                        <i data-lucide="shield" onclick="handleShieldClick()" class="text-[#8b9d67] w-6 h-6 cursor-pointer hover:scale-110 transition-transform"></i>
+                        <span class="text-2xl font-black uppercase font-oswald text-white">WAR ZONE</span>
+                    </div>
+                    <p data-lang="footer-desc" class="text-gray-600 text-[10px] uppercase tracking-[0.5em]">Military Simulation Minecraft Server</p>
+                </div>
+                <div class="flex gap-10 items-center">
+                    <a href="https://discord.gg/SHGKZdZH5h" target="_blank" class="social-link" title="Discord">
+                        <i class="fa-brands fa-discord text-3xl"></i>
+                    </a>
+                    <a href="https://www.youtube.com/@WarZoneMINE" target="_blank" class="social-link" title="YouTube">
+                        <i class="fa-brands fa-youtube text-3xl"></i>
+                    </a>
+                </div>
+            </div>
+            <p id="copyright" onclick="handleCopyrightClick()" data-lang="footer-copy" class="text-center text-gray-800 text-[10px] mt-16 uppercase tracking-widest italic cursor-pointer select-none">© 2026 WARZONE. НЕ ЯВЛЯЕТСЯ ОФИЦИАЛЬНЫМ ПРОДУКТОМ MOJANG.</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        const translations = {
+            ru: {
+                "nav-home": "Главная",
+                "nav-tasks": "Задачи",
+                "btn-download-modpack": "Скачать сборку",
+                "ip-label": "Шифр доступа (IP)",
+                "copy-success": "Координаты в буфере!",
+                "card1-title": "Одроженск",
+                "card1-desc": "Масштабное сражение. Захватывайте стратегические точки, используя пехоту и бронетехнику для подавления противника.",
+                "card1-status": "Status: Battle Active",
+                "card2-title": "Командный бой",
+                "card2-desc": "Победа зависит от слаженности вашего отряда. Используйте тактическое преимущество и удерживайте позиции до конца.",
+                "card2-status": "Tactical Link: Online",
+                "footer-desc": "Military Simulation Minecraft Server",
+                "footer-copy": "© 2026 WARZONE. НЕ ЯВЛЯЕТСЯ ОФИЦИАЛЬНЫМ ПРОДУКТОМ MOJANG.",
+                "easter-egg": "ах ты злой котокбасина тупая",
+                "shield-msg-1": "Зачем ты нажимаешь на меня?",
+                "shield-msg-2": "Ты достал!",
+                "shield-msg-3": "ТЫ ЗАКОЛЕБАЛ"
+            },
+            en: {
+                "nav-home": "Home",
+                "nav-tasks": "Objectives",
+                "btn-download-modpack": "Download Modpack",
+                "ip-label": "Access Cipher (IP)",
+                "copy-success": "Coordinates copied!",
+                "card1-title": "Odrozhensk",
+                "card1-desc": "Large-scale combat. Capture strategic objectives using infantry and armor to suppress the enemy.",
+                "card1-status": "Status: Battle Active",
+                "card2-title": "Team Deathmatch",
+                "card2-desc": "Victory depends on your squad's coordination. Use tactical advantages and hold your positions to the end.",
+                "card2-status": "Tactical Link: Online",
+                "footer-desc": "Military Simulation Minecraft Server",
+                "footer-copy": "© 2026 WARZONE. NOT AN OFFICIAL MOJANG PRODUCT.",
+                "easter-egg": "you evil stupid kotakbasina",
+                "shield-msg-1": "Why are you clicking on me?",
+                "shield-msg-2": "Stop it!",
+                "shield-msg-3": "YOU ARE ANNOYING"
+            }
+        };
+
+        let currentLang = 'ru';
+
+        function setLanguage(lang) {
+            if (lang === currentLang) return;
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            document.getElementById('btn-ru').classList.toggle('lang-active', lang === 'ru');
+            document.getElementById('btn-en').classList.toggle('lang-active', lang === 'en');
+            document.documentElement.lang = lang;
+            currentLang = lang;
+        }
+
+        // Многоуровневая логика пасхалки на щит
+        let shieldClicks = 0;
+        let shieldTimer;
+
+        function handleShieldClick() {
+            shieldClicks++;
+            clearTimeout(shieldTimer);
+            shieldTimer = setTimeout(() => { /* Не сбрасываем, чтобы прогресс сохранялся */ }, 2000);
+
+            const toast = document.getElementById('shield-toast');
+            
+            if (shieldClicks === 1) {
+                toast.textContent = translations[currentLang]["shield-msg-1"];
+                toast.style.display = 'block';
+                setTimeout(() => { toast.style.display = 'none'; }, 2000);
+            } 
+            else if (shieldClicks === 4) { // После первой серии в 1 клик, еще 3 нажатия
+                toast.textContent = translations[currentLang]["shield-msg-2"];
+                toast.style.display = 'block';
+                setTimeout(() => { toast.style.display = 'none'; }, 2000);
+            } 
+            else if (shieldClicks === 14) { // Еще 10 нажатий
+                document.getElementById('full-screen-egg').style.display = 'flex';
+                shieldClicks = 0; // Сброс
+            }
+        }
+
+        // Логика пасхалки на копирайт
+        let clickCount = 0;
+        let clickTimer;
+
+        function handleCopyrightClick() {
+            clickCount++;
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => { clickCount = 0; }, 500);
+
+            if (clickCount === 3) {
+                const toast = document.getElementById('easter-egg-toast');
+                toast.textContent = translations[currentLang]["easter-egg"];
+                toast.style.display = 'block';
+                setTimeout(() => { toast.style.display = 'none'; }, 3000);
+                clickCount = 0;
+            }
+        }
+
+        async function copyToClipboard(text) {
+            const el = document.createElement('textarea');
+            el.value = text;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            const msg = document.getElementById('copy-success');
+            msg.classList.remove('hidden');
+            setTimeout(() => msg.classList.add('hidden'), 2500);
+        }
+    </script>
+</body>
+</html>
