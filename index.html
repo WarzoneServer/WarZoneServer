@@ -7,14 +7,15 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Montserrat:wght@400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Montserrat:wght@900&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary-war: #5d6d3e;
             --accent-war: #8b9d67;
             --bg-dark: #0d0e0a;
-            --alliance-color: #3b82f6;
-            --rebels-color: #ef4444;
+            --red-side: #ef4444;
+            --blue-side: #3b82f6;
+            --yellow-war: #facc15;
         }
         html {
             scroll-behavior: smooth;
@@ -116,7 +117,6 @@
             transform: scale(1.1);
         }
 
-        /* Окна */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -139,28 +139,6 @@
             overflow: hidden;
         }
 
-        /* Выбор команды */
-        .team-option {
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        .team-option.selected-alliance { border-color: var(--alliance-color); background: rgba(59, 130, 246, 0.1); }
-        .team-option.selected-rebels { border-color: var(--rebels-color); background: rgba(239, 68, 68, 0.1); }
-
-        .account-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.2s;
-        }
-        .account-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-        .account-item.active {
-            border-color: var(--accent-war);
-            background: rgba(139, 157, 103, 0.1);
-        }
-
         /* Пасхалки */
         .custom-toast {
             position: fixed;
@@ -180,18 +158,28 @@
         }
         #easter-egg-toast { background: #ff4444; box-shadow: 0 0 40px rgba(255, 68, 68, 0.7); animation: shake 0.5s infinite; }
 
-        #full-screen-egg {
+        #full-screen-egg, #abrams-egg {
             position: fixed;
             inset: 0;
-            background: red;
-            color: white;
             z-index: 9999;
             display: none;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-family: 'Oswald', sans-serif;
             text-align: center;
+        }
+
+        #full-screen-egg {
+            background: red;
+            color: white;
+        }
+
+        #abrams-egg {
+            background: black;
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://i.postimg.cc/13CfgjjZ/2026-01-20-16-20-05.png');
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
         }
 
         @keyframes shake {
@@ -201,57 +189,39 @@
             75% { transform: translateX(-50%) translate(-2px, 2px); }
             100% { transform: translateX(-50%) translate(0, 0); }
         }
+
+        .tech-item {
+            background: rgba(255,255,255,0.03);
+            border-left: 3px solid transparent;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: default;
+        }
+        .tech-red .tech-item { border-left-color: var(--red-side); }
+        .tech-blue .tech-item { border-left-color: var(--blue-side); }
+        .tech-extra .tech-item { border-left-color: var(--yellow-war); }
+        .clickable-tech { cursor: pointer; transition: background 0.2s; }
+        .clickable-tech:active { background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="easter-egg-toast" class="custom-toast">ах ты злой котокбасина тупая</div>
+    <div id="easter-egg-toast" data-lang="egg-toast-text" class="custom-toast">ах ты злой котокбасина тупая</div>
     
     <div id="full-screen-egg">
-        <h2 id="egg-text" data-lang="egg-main-text" class="text-[10vw] font-black uppercase leading-none">ТЫ ЗАКОЛЕБАЛ</h2>
+        <h2 id="egg-text" data-lang="egg-main-text" class="text-[10vw] font-oswald font-black uppercase leading-none text-white">ТЫ ЗАКОЛЕБАЛ</h2>
         <button id="egg-btn" data-lang="egg-btn-text" onclick="document.getElementById('full-screen-egg').style.display='none'" class="mt-10 border-4 border-white px-10 py-4 font-bold text-2xl hover:bg-white hover:text-red-600 transition-colors uppercase">Простите меня</button>
     </div>
 
-    <!-- Окно Профилей и Регистрации -->
-    <div id="auth-modal" class="modal-overlay" style="display: none;">
-        <div class="modal-content p-8 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="auth-title" data-lang="auth-modal-title" class="text-3xl font-black font-oswald text-white uppercase">ПРОФИЛИ БОЙЦОВ</h2>
-                <button onclick="closeAuth()" class="text-white/30 hover:text-white transition-colors"><i data-lucide="x"></i></button>
-            </div>
-            
-            <!-- Список существующих аккаунтов -->
-            <div id="accounts-section" class="mb-8">
-                <p data-lang="auth-modal-label" class="text-[10px] font-bold text-[#8b9d67] uppercase mb-3 tracking-widest">ВАШИ ПЕРСОНАЖИ:</p>
-                <div id="accounts-list" class="space-y-2">
-                    <!-- Заполняется через JS -->
-                </div>
-            </div>
-
-            <!-- Форма создания нового -->
-            <div class="border-t border-white/10 pt-6">
-                <p data-lang="auth-new-nick" class="text-[10px] font-bold text-[#8b9d67] uppercase mb-4 tracking-widest">НОВЫЙ НИКНЕЙМ:</p>
-                <div class="space-y-6">
-                    <div>
-                        <input type="text" id="mc-username" placeholder="НИКНЕЙМ..." class="w-full bg-black/50 border border-white/10 p-4 text-white font-bold focus:border-[#8b9d67] outline-none transition-all">
-                    </div>
-
-                    <div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div onclick="selectTeam('alliance')" id="team-alliance" class="team-option p-4 bg-black/30 text-center border border-white/10">
-                                <div class="w-3 h-3 rounded-full bg-blue-500 mx-auto mb-2 shadow-[0_0_10px_rgba(59,130,246,0.6)]"></div>
-                                <p data-lang="team-blue" class="font-black text-[10px] text-white uppercase">СИНИЕ</p>
-                            </div>
-                            <div onclick="selectTeam('rebels')" id="team-rebels" class="team-option p-4 bg-black/30 text-center border border-white/10">
-                                <div class="w-3 h-3 rounded-full bg-red-500 mx-auto mb-2 shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
-                                <p data-lang="team-red" class="font-black text-[10px] text-white uppercase">КРАСНЫЕ</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button onclick="saveProfile()" data-lang="btn-add-profile" class="w-full btn-military py-4 font-black uppercase text-sm tracking-widest mt-2">ДОБАВИТЬ БОЙЦА</button>
-                </div>
-            </div>
+    <!-- Пасхалка Абрамса -->
+    <div id="abrams-egg" onclick="this.style.display='none'">
+        <div class="bg-black/80 backdrop-blur-sm p-8 border border-white/20 text-center">
+            <h2 class="text-4xl font-black text-white uppercase mb-4 font-oswald tracking-widest">M1A2 ABRAMS</h2>
+            <p data-lang="egg-abrams-close" class="text-white/60 text-xs uppercase tracking-[0.3em]">нажми чтобы закрыть / click to close</p>
         </div>
     </div>
 
@@ -289,15 +259,10 @@
                     <span class="text-3xl font-black tracking-tighter uppercase font-oswald text-white text-nowrap">WAR<span class="text-[#8b9d67]">ZONE</span></span>
                 </div>
                 
-                <div class="hidden lg:flex space-x-6 items-center">
-                    <div id="user-display" class="hidden flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2 rounded-sm mr-4 cursor-pointer hover:bg-white/10" onclick="openAuth()">
-                        <div id="user-team-icon" class="w-3 h-3 rounded-full"></div>
-                        <span id="display-name" class="font-bold text-xs uppercase tracking-tighter text-white italic">Guest</span>
-                        <i data-lucide="chevron-down" class="w-3 h-3 text-gray-500"></i>
-                    </div>
-
+                <div class="hidden lg:flex space-x-4 items-center">
                     <div class="flex gap-1 mr-4">
                         <button onclick="setLanguage('ru')" id="btn-ru" class="lang-btn lang-active">RU</button>
+                        <button onclick="setLanguage('ua')" id="btn-ua" class="lang-btn">UA</button>
                         <button onclick="setLanguage('en')" id="btn-en" class="lang-btn">EN</button>
                     </div>
                     
@@ -375,6 +340,63 @@
         </div>
     </section>
 
+    <!-- Техника сервера -->
+    <section id="tech" class="pb-32 px-4 bg-[#0a0b08]">
+        <div class="max-w-7xl mx-auto border-t border-white/5 pt-20">
+            <h2 data-lang="tech-title" class="text-4xl font-black font-oswald text-center text-white uppercase mb-16 tracking-widest italic">Техника сервера / Server Assets</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
+                <!-- Красная сторона -->
+                <div class="tech-red">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-10 h-10 bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-500">
+                            <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                        </div>
+                        <h3 data-lang="side-red" class="text-2xl font-black font-oswald text-red-500 uppercase tracking-tighter">Красная сторона</h3>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div data-lang="tech-r1" class="tech-item">Урал</div>
+                        <div data-lang="tech-r2" class="tech-item">Т-90A</div>
+                        <div data-lang="tech-r3" class="tech-item">Спрут</div>
+                        <div data-lang="tech-r4" class="tech-item">БМД-3</div>
+                    </div>
+                </div>
+
+                <!-- Доп Оружие -->
+                <div class="tech-extra">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-10 h-10 bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center text-yellow-400">
+                            <i data-lucide="swords" class="w-6 h-6"></i>
+                        </div>
+                        <h3 data-lang="extra-title" class="text-2xl font-black font-oswald text-yellow-400 uppercase tracking-tighter">Доп. вооружение</h3>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div data-lang="extra-1" class="tech-item">ФПВ дрон с Фугасом</div>
+                        <div data-lang="extra-2" class="tech-item">ФПВ дрон с РПГ</div>
+                        <div data-lang="extra-3" class="tech-item">M320</div>
+                        <div data-lang="extra-4" class="tech-item">РПГ-7</div>
+                    </div>
+                </div>
+
+                <!-- Синяя сторона -->
+                <div class="tech-blue">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-10 h-10 bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-500">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                        <h3 data-lang="side-blue" class="text-2xl font-black font-oswald text-blue-500 uppercase tracking-tighter">Синяя сторона</h3>
+                    </div>
+                    <div class="grid grid-cols-1 gap-2">
+                        <div data-lang="tech-b1" class="tech-item">Хамви</div>
+                        <div data-lang="tech-b2" onclick="handleAbramsClick()" class="tech-item clickable-tech">M1A2</div>
+                        <div data-lang="tech-b3" class="tech-item">M1A2 SEP</div>
+                        <div data-lang="tech-b4" class="tech-item">M3A3 Bradley</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Подвал -->
     <footer class="py-20 bg-black border-t border-white/5 text-white">
         <div class="max-w-7xl mx-auto px-4">
@@ -414,6 +436,13 @@
                 "card1-desc": "Масштабное сражение. Захватывайте стратегические точки, используя пехоту и бронетехнику для подавления противника.",
                 "card2-title": "Командный бой",
                 "card2-desc": "Победа зависит от слаженности вашего отряда. Используйте тактическое преимущество и удерживайте позиции до конца.",
+                "tech-title": "Техника сервера",
+                "side-red": "Красная сторона",
+                "side-blue": "Синяя сторона",
+                "tech-r1": "Урал", "tech-r2": "Т-90A", "tech-r3": "Спрут", "tech-r4": "БМД-3",
+                "tech-b1": "Хамви", "tech-b2": "M1A2", "tech-b3": "M1A2 SEP", "tech-b4": "M3A3 Bradley",
+                "extra-title": "Доп. вооружение",
+                "extra-1": "ФПВ дрон с Фугасом", "extra-2": "ФПВ дрон с РПГ", "extra-3": "M320", "extra-4": "РПГ-7",
                 "footer-desc": "Military Simulation Minecraft Server",
                 "footer-copy": "© 2026 WARZONE. НЕ ЯВЛЯЕТСЯ ОФИЦИАЛЬНЫМ ПРОДУКТОМ MOJANG.",
                 "devlog-title": "ДЕВЛОГ / DEVELOPMENT LOG",
@@ -425,12 +454,40 @@
                 `,
                 "egg-main-text": "ТЫ ЗАКОЛЕБАЛ",
                 "egg-btn-text": "Простите меня",
-                "auth-modal-title": "ПРОФИЛИ БОЙЦОВ",
-                "auth-modal-label": "ВАШИ ПЕРСОНАЖИ:",
-                "auth-new-nick": "НОВЫЙ НИКНЕЙМ:",
-                "team-blue": "СИНИЕ",
-                "team-red": "КРАСНЫЕ",
-                "btn-add-profile": "ДОБАВИТЬ БОЙЦА"
+                "egg-abrams-close": "нажми чтобы закрыть / click to close",
+                "egg-toast-text": "ах ты злой котокбасина тупая"
+            },
+            ua: {
+                "nav-home": "Головна",
+                "nav-tasks": "Завдання",
+                "nav-devlog": "Девлог",
+                "btn-download-modpack": "Скачати збірку",
+                "ip-label": "Айпі",
+                "copy-success": "Айпі Скопійовано",
+                "card1-title": "Одроженськ",
+                "card1-desc": "Масштабна битва. Захоплюйте стратегічні точки, використовуючи піхоту та бронетехніку для придушення противника.",
+                "card2-title": "Командний бій",
+                "card2-desc": "Перемога залежить від злагодженості вашого загону. Використовуйте тактичну перевагу та утримуйте позиції до кінця.",
+                "tech-title": "Техніка сервера",
+                "side-red": "Червона сторона",
+                "side-blue": "Синя сторона",
+                "tech-r1": "Урал", "tech-r2": "Т-90A", "tech-r3": "Спрут", "tech-r4": "БМД-3",
+                "tech-b1": "Хамві", "tech-b2": "M1A2", "tech-b3": "M1A2 SEP", "tech-b4": "M3A3 Bradley",
+                "extra-title": "Дод. озброєння",
+                "extra-1": "ФПВ дрон з Фугасом", "extra-2": "ФПВ дрон з РПГ", "extra-3": "M320", "extra-4": "РПГ-7",
+                "footer-desc": "Military Simulation Minecraft Server",
+                "footer-copy": "© 2026 WARZONE. НЕ Є ОФІЦІЙНИМ ПРОДУКТОМ MOJANG.",
+                "devlog-title": "ДЕВЛОГ / DEVELOPMENT LOG",
+                "devlog-h1-title": "НОВА ІСТОРІЯ",
+                "devlog-h1-body": `
+                    <p class="mb-4">У першому девлозі ми хочемо повідомити про запуск нашого офіційного сайту, на якому ви читаєте даний матеріал.</p>
+                    <p class="mb-4">На даний час ведеться робота над картою, була підготовлена збірка проекту. Також ми розглядаємо можливість створення власних модифікацій.</p>
+                    <p class="italic text-[#8b9d67] font-bold">На даний момент це вся інформація.</p>
+                `,
+                "egg-main-text": "ТИ ЗАДОВБАВ",
+                "egg-btn-text": "Вибачте мене",
+                "egg-abrams-close": "натисни щоб закрити / click to close",
+                "egg-toast-text": "ах ти злий котокбасина тупа"
             },
             en: {
                 "nav-home": "Home",
@@ -443,6 +500,13 @@
                 "card1-desc": "Large-scale combat. Capture strategic objectives using infantry and armor to suppress the enemy.",
                 "card2-title": "Team Deathmatch",
                 "card2-desc": "Victory depends on your squad's coordination. Use tactical advantages and hold your positions to the end.",
+                "tech-title": "Server Assets",
+                "side-red": "Red Side",
+                "side-blue": "Blue Side",
+                "tech-r1": "Ural", "tech-r2": "T-90A", "tech-r3": "Sprut-SD", "tech-r4": "BMD-3",
+                "tech-b1": "Humvee", "tech-b2": "M1A2 Abrams", "tech-b3": "M1A2 SEP", "tech-b4": "M3A3 Bradley",
+                "extra-title": "Extra Weaponry",
+                "extra-1": "FPV Drone (HE Shell)", "extra-2": "FPV Drone (RPG)", "extra-3": "M320", "extra-4": "RPG-7",
                 "footer-desc": "Military Simulation Minecraft Server",
                 "footer-copy": "© 2026 WARZONE. NOT AN OFFICIAL MOJANG PRODUCT.",
                 "devlog-title": "DEV LOG / DEVELOPMENT LOG",
@@ -454,120 +518,12 @@
                 `,
                 "egg-main-text": "YOU ARE ANNOYING",
                 "egg-btn-text": "Forgive me",
-                "auth-modal-title": "COMBAT PROFILES",
-                "auth-modal-label": "YOUR CHARACTERS:",
-                "auth-new-nick": "NEW NICKNAME:",
-                "team-blue": "BLUE",
-                "team-red": "RED",
-                "btn-add-profile": "ADD SOLDIER"
+                "egg-abrams-close": "click to close",
+                "egg-toast-text": "you meanie cat-sausage dummy"
             }
         };
 
         let currentLang = 'ru';
-        let selectedTeam = '';
-        
-        let accounts = JSON.parse(localStorage.getItem('wz_accounts_list')) || [];
-        let activeProfile = JSON.parse(localStorage.getItem('wz_active_profile')) || null;
-
-        function openAuth() {
-            document.getElementById('auth-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            renderAccounts();
-        }
-
-        function closeAuth() {
-            document.getElementById('auth-modal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        function selectTeam(team) {
-            selectedTeam = team;
-            document.getElementById('team-alliance').className = "team-option p-4 bg-black/30 text-center border border-white/10" + (team === 'alliance' ? ' selected-alliance' : '');
-            document.getElementById('team-rebels').className = "team-option p-4 bg-black/30 text-center border border-white/10" + (team === 'rebels' ? ' selected-rebels' : '');
-        }
-
-        function saveProfile() {
-            const username = document.getElementById('mc-username').value.trim();
-            if(!username || !selectedTeam) return;
-            
-            const exists = accounts.find(a => a.username.toLowerCase() === username.toLowerCase());
-            
-            if (!exists) {
-                const newProfile = { username, team: selectedTeam };
-                accounts.push(newProfile);
-                localStorage.setItem('wz_accounts_list', JSON.stringify(accounts));
-                setActiveProfile(newProfile);
-            } else {
-                setActiveProfile(exists);
-            }
-            
-            document.getElementById('mc-username').value = '';
-            selectTeam('');
-            renderAccounts();
-        }
-
-        function setActiveProfile(profile) {
-            activeProfile = profile;
-            localStorage.setItem('wz_active_profile', JSON.stringify(profile));
-            updateUserDisplay();
-            renderAccounts();
-        }
-
-        function switchAccount(username) {
-            const profile = accounts.find(a => a.username === username);
-            if (profile) setActiveProfile(profile);
-        }
-
-        function deleteAccount(username, event) {
-            event.stopPropagation();
-            accounts = accounts.filter(a => a.username !== username);
-            localStorage.setItem('wz_accounts_list', JSON.stringify(accounts));
-            
-            if (activeProfile && activeProfile.username === username) {
-                activeProfile = accounts.length > 0 ? accounts[0] : null;
-                localStorage.setItem('wz_active_profile', JSON.stringify(activeProfile));
-            }
-            
-            updateUserDisplay();
-            renderAccounts();
-        }
-
-        function renderAccounts() {
-            const list = document.getElementById('accounts-list');
-            const section = document.getElementById('accounts-section');
-            
-            if (accounts.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-            
-            section.style.display = 'block';
-            list.innerHTML = accounts.map(acc => `
-                <div onclick="switchAccount('${acc.username}')" class="account-item p-3 flex justify-between items-center cursor-pointer ${activeProfile?.username === acc.username ? 'active' : ''}">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full" style="background-color: ${acc.team === 'alliance' ? 'var(--alliance-color)' : 'var(--rebels-color)'}"></div>
-                        <span class="font-bold text-[11px] text-white uppercase tracking-wider">${acc.username}</span>
-                    </div>
-                    <button onclick="deleteAccount('${acc.username}', event)" class="text-white/10 hover:text-red-500 transition-colors">
-                        <i data-lucide="trash-2" class="w-3 h-3"></i>
-                    </button>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
-        function updateUserDisplay() {
-            const display = document.getElementById('user-display');
-            if(activeProfile) {
-                display.classList.remove('hidden');
-                display.classList.add('flex');
-                document.getElementById('display-name').textContent = activeProfile.username;
-                const icon = document.getElementById('user-team-icon');
-                icon.style.backgroundColor = activeProfile.team === 'alliance' ? 'var(--alliance-color)' : 'var(--rebels-color)';
-            } else {
-                display.classList.add('hidden');
-            }
-        }
 
         function setLanguage(lang) {
             if (lang === currentLang) return;
@@ -575,16 +531,16 @@
             
             document.querySelectorAll('[data-lang]').forEach(element => {
                 const key = element.getAttribute('data-lang');
-                if (translations[lang][key]) {
+                if (translations[lang] && translations[lang][key]) {
                     if (key.includes('body')) element.innerHTML = translations[lang][key];
                     else element.textContent = translations[lang][key];
                 }
             });
             
+            // Обновляем активную кнопку
             document.getElementById('btn-ru').classList.toggle('lang-active', lang === 'ru');
+            document.getElementById('btn-ua').classList.toggle('lang-active', lang === 'ua');
             document.getElementById('btn-en').classList.toggle('lang-active', lang === 'en');
-            
-            renderAccounts();
         }
 
         function openDevlog() {
@@ -606,6 +562,18 @@
             }
         }
 
+        let abramsClicks = 0;
+        let abramsTimer;
+        function handleAbramsClick() {
+            clearTimeout(abramsTimer);
+            abramsClicks++;
+            if (abramsClicks === 3) {
+                document.getElementById('abrams-egg').style.display = 'flex';
+                abramsClicks = 0;
+            }
+            abramsTimer = setTimeout(() => { abramsClicks = 0; }, 1000);
+        }
+
         function handleCopyrightClick() {
             const toast = document.getElementById('easter-egg-toast');
             toast.style.display = 'block';
@@ -622,11 +590,6 @@
             const msg = document.getElementById('copy-success');
             msg.classList.remove('hidden');
             setTimeout(() => msg.classList.add('hidden'), 2500);
-        }
-
-        window.onload = () => {
-            updateUserDisplay();
-            if(!activeProfile) setTimeout(openAuth, 1000);
         }
     </script>
 </body>
